@@ -1,0 +1,18 @@
+[flake8]
+# Fájlok és könyvtárak, amiket figyelmen kívül kell hagyni
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    build,
+    dist,
+    *.pyc,
+    *.egg-info,
+    *.json,
+    # Példa külső modulok könyvtáraira vagy konkrét fájlokra:
+    # site-packages,
+    # external_libs,
+    # _argcomplete.py,
+    # code.py,
