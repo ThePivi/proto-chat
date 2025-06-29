@@ -5,11 +5,9 @@ pipeline {
     stages {
         stage('Build & Test') {
             steps {
-                // A venv aktiválás helyi shellben történik, nem kell expliciten forrásolni.
                 sh 'pip install -r requirements.txt'
                 sh 'pip install build flake8 pytest-cov'
 
-                // Futtatjuk a statikus elemzést, a teszteket és a coverage-t.
                 sh 'flake8 --output-file=flake8-results.txt'
                 sh 'pytest --junitxml=test-results.xml --cov=. --cov-report=xml'
             }
@@ -40,12 +38,11 @@ pipeline {
 
     // A 'post' blokk a build befejezése után fut le.
     post {
-        // --- Ezt a blokkot futtatja le mindig, sikertől függetlenül ---
+        // --- Teszt riportok, Kódlefedettség, Kódminőség (mindig lefut) ---
         always {
             // Teszt riportok - JUnit
-            // Ellenőriztem a JUnit step dokumentációját. A keepLongStdio nem mindig van, de allowEmptyResults igen.
             junit testResults: 'test-results.xml', allowEmptyResults: true
-            
+
             // Kódlefedettség (Coverage) - Cobertura
             // Az "autoUpdateSource" és "enableSourceFileRetention" paraméterek helytelenek voltak,
             // a sourceFileDepth elavult, a sourceEncoding pedig objektumot vár.
@@ -61,8 +58,6 @@ pipeline {
             }
 
             // Kódminőség (Warnings) - Record Issues
-            // A 'pyLint' helyett a 'flake8' step a helyes, és 'pattern' helyett 'reportFile'.
-            // skipChecks helyett skipBlames a javasolt.
             recordIssues(
                 tools: [
                     flake8(reportFile: 'flake8-results.txt')
@@ -75,9 +70,12 @@ pipeline {
         // --- Artifact Archiválás (csak sikeres build esetén) ---
         success {
             archiveArtifacts artifacts: 'dist/*.whl, dist/*.tar.gz', fingerprint: true, onlyIfSuccessful: true
+
+            // Slack értesítés sikeres build esetén
+            slackSend(color: 'good', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} SIKERESEN BEFEJEZŐDÖTT! :tada: <${env.BUILD_URL}|Build megtekintése>")
         }
 
-        // --- E-mail értesítés (csak sikertelen build esetén) ---
+        // --- E-mail és Slack értesítés (csak sikertelen build esetén) ---
         failure {
             emailext(
                 subject: '$PROJECT_NAME - Build #$BUILD_NUMBER - $BUILD_STATUS!',
@@ -86,15 +84,11 @@ pipeline {
                       '${BUILD_LOG}',
                 to: 'peter.pivarcsik@yahoo.com'
             )
-        }
-        
-        // --- Slack értesítés (sikertelen, sikeres és megszakított build esetén) ---
-        failure {
+            // Slack értesítés hibás build esetén
             slackSend(color: 'danger', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} HIBÁVAL VÉGZŐDÖTT! <${env.BUILD_URL}|Build megtekintése>")
         }
-        success {
-            slackSend(color: 'good', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} SIKERESEN BEFEJEZŐDÖTT! :tada: <${env.BUILD_URL}|Build megtekintése>")
-        }
+
+        // --- Slack értesítés megszakított build esetén ---
         aborted {
             slackSend(color: 'warning', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} MEGSZAKÍTVA! :warning: <${env.BUILD_URL}|Build megtekintése>")
         }
