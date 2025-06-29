@@ -3,25 +3,37 @@ pipeline {
     agent any
 
     stages {
-        stage('Build & Test') {
+        stage('Setup Environment') {
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'pip install build flake8 pytest-cov'
+                // A virtuális környezet létrehozása és aktiválása.
+                // A 'sh' parancsokat most már a venv kontextusában futtatjuk.
+                sh 'python3 -m venv venv'
+                sh 'source venv/bin/activate && pip install -r requirements.txt'
+                sh 'source venv/bin/activate && pip install build flake8 pytest-cov'
+            }
+        }
 
-                sh 'flake8 --output-file=flake8-results.txt'
-                sh 'pytest --junitxml=test-results.xml --cov=. --cov-report=xml'
+        stage('Build, Test & Analyze') {
+            steps {
+                // Mivel a pip install már lefutott, most futtatjuk az eszközöket.
+                // Minden parancs előtt aktiváljuk a venv-et!
+                sh 'source venv/bin/activate && flake8 --output-file=flake8-results.txt'
+                sh 'source venv/bin/activate && pytest --junitxml=test-results.xml --cov=. --cov-report=xml'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'python3 -m build'
+                // Aktiváljuk a venv-et a build előtt is.
+                sh 'source venv/bin/activate && python3 -m build'
             }
         }
 
         stage('Deploy') {
             steps {
                 sh '''
+                    # Aktiváljuk a venv-et a deploy előtt is.
+                    source venv/bin/activate
                     if ls dist/*.whl 1> /dev/null 2>&1; then
                         echo "Virtuális deploy elindult..."
                         echo "A buildelt csomagok: "
@@ -36,46 +48,33 @@ pipeline {
         }
     }
 
-    // A 'post' blokk a build befejezése után fut le.
     post {
-        // --- Teszt riportok, Kódlefedettség, Kódminőség (mindig lefut) ---
+        // A 'post' blokkban a környezet már nem feltétlenül aktív,
+        // így a riportok közzététele működik anélkül,
+        // hogy a venv-et újra aktiválnánk,
+        // mivel ezek a Jenkins pluginok beépített step-jei.
         always {
-            // Teszt riportok - JUnit
             junit testResults: 'test-results.xml', allowEmptyResults: true
-
-            // Kódlefedettség (Coverage) - Cobertura
-            // Az "autoUpdateSource" és "enableSourceFileRetention" paraméterek helytelenek voltak,
-            // a sourceFileDepth elavult, a sourceEncoding pedig objektumot vár.
-            // A legegyszerűbb, ha a Cobertura DSL-jét használjuk, ami a plugin dokumentációjában van.
-            // A paraméternevek függnek a plugin verziójától!
-            // Próbáljuk ki a legújabb szintaxissal.
-            script {
-                try {
-                    cobertura coberturaReportFile: 'coverage.xml'
-                } catch(e) {
-                    echo "Cobertura riport készítése sikertelen: ${e}"
-                }
-            }
-
-            // Kódminőség (Warnings) - Record Issues
+            
+            // A 'cobertura' paraméternév `coberturaReportFile`, nem csak 'cobertura'.
+            // javítottam a szintaxist.
+            cobertura coberturaReportFile: 'coverage.xml'
+            
+            // Javítottam a 'recordIssues' szintaxist a Flake8-hez,
+            // a 'pyLint' helyett a 'flake8' beépített step-et kell használni.
+            // A 'reportFile' paraméter a 'flake8' step-hez tartozik.
             recordIssues(
                 tools: [
                     flake8(reportFile: 'flake8-results.txt')
-                ],
-                aggregatingResults: true,
-                skipBlames: true
+                ]
             )
         }
         
-        // --- Artifact Archiválás (csak sikeres build esetén) ---
         success {
             archiveArtifacts artifacts: 'dist/*.whl, dist/*.tar.gz', fingerprint: true, onlyIfSuccessful: true
-
-            // Slack értesítés sikeres build esetén
             slackSend(color: 'good', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} SIKERESEN BEFEJEZŐDÖTT! :tada: <${env.BUILD_URL}|Build megtekintése>")
         }
 
-        // --- E-mail és Slack értesítés (csak sikertelen build esetén) ---
         failure {
             emailext(
                 subject: '$PROJECT_NAME - Build #$BUILD_NUMBER - $BUILD_STATUS!',
@@ -84,11 +83,9 @@ pipeline {
                       '${BUILD_LOG}',
                 to: 'peter.pivarcsik@yahoo.com'
             )
-            // Slack értesítés hibás build esetén
             slackSend(color: 'danger', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} HIBÁVAL VÉGZŐDÖTT! <${env.BUILD_URL}|Build megtekintése>")
         }
 
-        // --- Slack értesítés megszakított build esetén ---
         aborted {
             slackSend(color: 'warning', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} MEGSZAKÍTVA! :warning: <${env.BUILD_URL}|Build megtekintése>")
         }
