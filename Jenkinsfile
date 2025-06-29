@@ -70,6 +70,13 @@ pipeline {
         success {
             archiveArtifacts artifacts: 'dist/*.whl, dist/*.tar.gz', fingerprint: true, onlyIfSuccessful: true
             slackSend(color: 'good', message: "A ${env.JOB_NAME} build #${env.BUILD_NUMBER} SIKERESEN BEFEJEZŐDÖTT! :tada: <${env.BUILD_URL}|Build megtekintése>")
+            emailext(
+                subject: '$PROJECT_NAME - Build #$BUILD_NUMBER - $BUILD_STATUS!',
+                body: '$PROJECT_NAME - Build #$BUILD_NUMBER ($BUILD_URL) - Státusz: $BUILD_STATUS\n\n' +
+                      'A build log:\n\n' +
+                      '${BUILD_LOG}',
+                to: 'peter.pivarcsik@yahoo.com'
+            )
         }
 
         failure {
