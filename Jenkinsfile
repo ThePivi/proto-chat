@@ -2,10 +2,6 @@
 pipeline {
     agent any
 
-    options {
-        cleanWs()
-    }
-
     environment {
         // A 'PATH' környezeti változó kibővítése a virtuális környezet 'bin' mappájával.
         // Ez biztosítja, hogy a Jenkins megtalálja a venv-ben telepített eszközöket.
