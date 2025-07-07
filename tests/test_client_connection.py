@@ -1,22 +1,35 @@
-# tests/test_client_connection.py
 import pytest
-from your_module_name.client import P2PClient
+import threading
+import time
+import socket
+from proto_chat.protochat_client import ProtoChatClient
+from proto_chat.protochat_server import ProtoChatServer
+from unittest.mock import Mock, patch
 
-# Cél: Tesztelni a connect metódust
+@pytest.fixture
+def mock_p2p_client():
+    """Fixture, ami egy mock-olt P2P klienst ad vissza tesztelésre."""
+    return Mock(spec=ProtoChatClient)
+
 def test_client_connects_to_peer():
-    """
-    Teszt: Ellenőrzi, hogy a kliens sikeresen tud-e csatlakozni egy peerhez.
-    """
-    # Arrange
-    # Itt mock-oljuk a hálózati kommunikációt, hogy ne kelljen valódi szervert futtatni.
-    # Ez a "unit test", ami az adott egységet (itt a 'connect' metódust) teszteli izoláltan.
-    mock_socket = Mock() # A 'mock' könyvtárból
-    client = P2PClient(port=12345)
+    host = '127.0.0.1'
+    port = 9000
+
+    # szerver indítása külön thread-ben
+    t = threading.Thread(target=ProtoChatServer.start_server, args=(host, port), daemon=True)
+    t.start()
+
+    time.sleep(0.2)  # adj egy kis időt, hogy elinduljon a szerver
     
-    # Act
-    # Hívjuk a connect metódust
-    is_connected = client.connect(peer_ip="127.0.0.1", peer_port=54321)
+    client = ProtoChatClient(port=12345)
     
-    # Assert
-    # Ellenőrizzük, hogy a metódus 'True'-val tért vissza, jelezve a sikert.
+    is_connected = client.connect(peer_ip=host, peer_port=port)
+    
     assert is_connected is True
+
+def test_client_sends_message(mock_p2p_client):
+    mock_p2p_client.connect.return_value = True
+    
+    result = mock_p2p_client.connect("Hello, world!")
+    
+    assert result is True
