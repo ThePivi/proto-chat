@@ -5,5 +5,8 @@ This is a p2p chat program where clients will be able to send messages with all 
 
 Triggeting CI/CD with a push
 
-Adding status:
+
+Freestyle status:
 [![Build Status](https://c220-2a02-a03f-813f-e800-587b-7237-241e-f222.ngrok-free.app/job/FreeStyle%20project%20for%20ProtoCat/badge/icon)](https://c220-2a02-a03f-813f-e800-587b-7237-241e-f222.ngrok-free.app/job/FreeStyle%20project%20for%20ProtoCat/)
+PipeLine status:
+[![Build Status](https://c220-2a02-a03f-813f-e800-587b-7237-241e-f222.ngrok-free.app/job/Pipeline%20for%20ProtoChat/badge/icon)](https://c220-2a02-a03f-813f-e800-587b-7237-241e-f222.ngrok-free.app/job/Pipeline%20for%20ProtoChat/)
