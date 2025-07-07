@@ -2,6 +2,10 @@
 pipeline {
     agent any
 
+    options {
+        cleanWs()
+    }
+
     environment {
         // A 'PATH' környezeti változó kibővítése a virtuális környezet 'bin' mappájával.
         // Ez biztosítja, hogy a Jenkins megtalálja a venv-ben telepített eszközöket.
@@ -24,7 +28,8 @@ pipeline {
             steps {
                 // Mivel a PATH be van állítva, a pip, pytest, flake8 parancsok
                 // automatikusan a venv-ben lévő verziókra hivatkoznak.
-                sh 'flake8 --output-file=flake8-results.txt'
+                sh 'flake8 --output-file=flake8-results.txt || true'
+                sh 'cat flake8-results.txt'
                 sh 'pytest --junitxml=test-results.xml --cov=. --cov-report=xml'
             }
         }

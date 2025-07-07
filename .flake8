@@ -1,5 +1,5 @@
 [flake8]
-# Fájlok és könyvtárak, amiket figyelmen kívül kell hagyni
+# Files and directories to not check
 exclude =
     .git,
     __pycache__,
@@ -11,8 +11,6 @@ exclude =
     *.pyc,
     *.egg-info,
     *.json,
-    # Példa külső modulok könyvtáraira vagy konkrét fájlokra:
-    # site-packages,
+    # Dependencies and files if required:
     # external_libs,
-    # _argcomplete.py,
     # code.py,
