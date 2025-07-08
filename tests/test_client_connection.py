@@ -16,9 +16,7 @@ def test_client_connects_to_peer():
     port = 9000
 
     # szerver indítása külön thread-ben
-    t = threading.Thread(target=ProtoChatServer.start_server, 
-                         args=(host, port), 
-                         daemon=True)
+    t = threading.Thread(target=ProtoChatServer.start_server, args=(host, port), daemon=True)  # noqa: E501
     t.start()
 
     time.sleep(0.2)  # adj egy kis időt, hogy elinduljon a szerver
