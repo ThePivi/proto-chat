@@ -9,6 +9,12 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                cleanWs()
+                checkout scm
+            }
+        }
         stage('Setup Environment') {
             steps {
                 // A virtuális környezet létrehozása és a függőségek telepítése.
