@@ -1,10 +1,9 @@
 import pytest
 import threading
 import time
-import socket
 from proto_chat.protochat_client import ProtoChatClient
 from proto_chat.protochat_server import ProtoChatServer
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 
 @pytest.fixture
@@ -17,7 +16,9 @@ def test_client_connects_to_peer():
     port = 9000
 
     # szerver indítása külön thread-ben
-    t = threading.Thread(target=ProtoChatServer.start_server, args=(host, port), daemon=True)
+    t = threading.Thread(target=ProtoChatServer.start_server, 
+                         args=(host, port), 
+                         daemon=True)
     t.start()
 
     time.sleep(0.2)  # adj egy kis időt, hogy elinduljon a szerver
