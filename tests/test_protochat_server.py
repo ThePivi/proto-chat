@@ -6,10 +6,12 @@ import time
 from proto_chat.protochat_server import ProtoChatServer
 from unittest.mock import Mock
 
+
 def test_bind_socket_calls_bind_correctly():
     mock_sock = Mock()
     ProtoChatServer.bind_socket(mock_sock, 'localhost', 1234)
     mock_sock.bind.assert_called_once_with(('localhost', 1234))
+
 
 def test_handle_client_sends_pong():
     mock_conn = Mock()
@@ -19,6 +21,7 @@ def test_handle_client_sends_pong():
 
     mock_conn.sendall.assert_called_once_with(b'pong')
     mock_conn.close.assert_called_once()
+
 
 def test_server_accepts_connection():
     host = '127.0.0.1'

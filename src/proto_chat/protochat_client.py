@@ -1,12 +1,12 @@
 # src/proto_chat/protochat_client.py
 import socket
 
+
 class ProtoChatClient:
     def __init__(self, port):
         self.port = port
         self.connected_peers = []
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 
     def connect(self, peer_ip, peer_port):
         try:

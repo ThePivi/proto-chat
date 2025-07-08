@@ -1,6 +1,7 @@
 # src/proto_chat/protochat_server.py
 import socket
 
+
 class ProtoChatServer:
     def start_server(host, port):
         s = socket.socket()
@@ -12,7 +13,7 @@ class ProtoChatServer:
             conn.sendall(b'ACK')
         conn.close()
         s.close()
-        
+
     def create_socket():
         return socket.socket()
 
